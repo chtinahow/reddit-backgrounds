@@ -33,45 +33,49 @@ def crawl_page(link, sub):
     after = None
 
     for post in posts:
-        print(post['data']['url'])
-        if 'preview' not in post['data']:
-            # No size, no save
-            continue
+        try:
+            print(post['data']['url'])
+            if 'preview' not in post['data']:
+                # No size, no save
+                continue
 
-        width = str(post['data']['preview']['images'][0]['source']['width'])
-        height = str(post['data']['preview']['images'][0]['source']['height'])
-        url = post['data']['url']
-        #print(url)
-        after = post['data']['id']
+            width = str(post['data']['preview']['images'][0]['source']['width'])
+            height = str(post['data']['preview']['images'][0]['source']['height'])
+            url = post['data']['url']
+            #print(url)
+            after = post['data']['id']
 
-        if not image_is_right_size(width, height):
-            continue
+            if not image_is_right_size(width, height):
+                continue
 
-        if url.endswith('.jpg') or url.endswith('.png'):
-            #print('simple image')
+            if url.endswith('.jpg') or url.endswith('.png'):
+                #print('simple image')
 
-            image_links[post['data']['id']] = url
+                image_links[post['data']['id']] = url
 
-        elif 'imgur' in url and 'gallery' in url:
-            #print('imgur gallery')
+            elif 'imgur' in url and 'gallery' in url:
+                #print('imgur gallery')
 
-            imgur = get_and_decode_json(url + '.json')
-            data = imgur['data']
+                imgur = get_and_decode_json(url + '.json')
+                data = imgur['data']
 
-            if 'album_images' in data:
-                #print('multiple images in album')
+                if 'album_images' in data:
+                    #print('multiple images in album')
 
-                for image in data['album_images']['images']:
-                    hsh = image['hash']
-                    image_links[hsh] = 'https://imgur.com/' + hsh
+                    for image in data['album_images']['images']:
+                        hsh = image['hash']
+                        image_links[hsh] = 'https://imgur.com/' + hsh
 
-            else:
-                #print('one image in album')
+                else:
+                    #print('one image in album')
 
-                hsh = data['image']['hash']
-                #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
-                #print(api)
-                image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+                    hsh = data['image']['hash']
+                    #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
+                    #print(api)
+                    image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+
+        except Exception:
+            pass
 
         #print()
 
