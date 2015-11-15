@@ -12,13 +12,15 @@ clientid = keyfile.read().strip()
 keyfile.close()
 
 def main():
-    url_params = {}
     with open('subreddits.txt') as f:
         
         for sub in [line.strip() for line in f if not line.isspace()]:
             if 'top' in sys.argv:
                 top = 'top/'
                 url_params = {'sort': 'top', 't': 'all'}
+            else:
+                top = ''
+                url_params = {}
 
             link = 'https://www.reddit.com/r/' + sub + '/' + top + '.json' + get_params(url_params)
 
@@ -69,23 +71,26 @@ def crawl_page(link, sub):
         elif 'imgur' in url and 'gallery' in url:
             #print('imgur gallery')
 
-            imgur = get_and_decode_json(url + '.json')
-            data = imgur['data']
+            try:
+                imgur = get_and_decode_json(url + '.json')
+                data = imgur['data']
 
-            if 'album_images' in data:
-                #print('multiple images in album')
+                if 'album_images' in data:
+                    #print('multiple images in album')
 
-                for image in data['album_images']['images']:
-                    hsh = image['hash']
-                    image_links[hsh] = 'https://imgur.com/' + hsh
+                    for image in data['album_images']['images']:
+                        hsh = image['hash']
+                        image_links[hsh] = 'https://imgur.com/' + hsh
 
-            else:
-                #print('one image in album')
+                else:
+                    #print('one image in album')
 
-                hsh = data['image']['hash']
-                #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
-                #print(api)
-                image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+                    hsh = data['image']['hash']
+                    #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
+                    #print(api)
+                    image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+            except Exception:
+                pass
 
         #print()
 
