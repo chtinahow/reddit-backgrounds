@@ -1,12 +1,19 @@
 
 import requests
+import json
 
 with open('subreddits.txt') as f:
     
     for sub in [line.strip() for line in f if not line.isspace()]:
-    	print(sub + '1')
+    	link = 'https://www.reddit.com/r/' + sub + '.json'
+    	print(link)
 
-    	link = 'https://reddit.com/' + sub + '/'
+    	headers = {'User-Agent': 'this is a user agent'}
+    	request = requests.get(link, headers=headers)
 
-    	page = reques
-    		
+    	page = json.loads(request.text)
+    	for key in page.keys():
+    		print(key)
+
+    	print(page['kind'])
+    	
