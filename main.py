@@ -20,7 +20,7 @@ def main():
 
             posts = [post for post in posts if not sub in post['data']['domain']]
             
-            image_links = []
+            image_links = {}
 
             for post in posts:
                 width = str(post['data']['preview']['images'][0]['source']['width'])
@@ -31,7 +31,7 @@ def main():
                 if url.endswith('.jpg') or url.endswith('.png'):
                     print('simple image')
 
-                    image_links.append(url)
+                    image_links[post['data']['id']] = url
 
                 elif 'imgur' in url and 'gallery' in url:
                     print('imgur gallery')
@@ -44,7 +44,7 @@ def main():
 
                         for image in data['album_images']['images']:
                             hsh = image['hash']
-                            image_links.append('https://imgur.com/' + hsh)
+                            image_links[hsh] = 'https://imgur.com/' + hsh
 
                     else:
                         print('one image in album')
@@ -52,16 +52,14 @@ def main():
                         hsh = data['image']['hash']
                         #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
                         #print(api)
-                        image_links.append('https://imgur.com/' + hsh + '.jpg')
+                        image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
 
                 print()
 
             # Fetch the images
-            i = 0
-            for link in image_links:
+            for id, link in image_links.items():
                 print('downloading ' + link + ' ...')
-                download_image(link, 'images/' + str(i) + '.jpg')
-                i += 1
+                download_image(link, 'images/' + id + '.jpg')
 
 def get_and_decode_json(url):
     global clientid
