@@ -3,6 +3,7 @@ import requests
 import json
 import urllib.request
 import os.path
+import sys
 
 keyfile = open('clientid.txt')
 global clientid
@@ -13,66 +14,89 @@ def main():
     with open('subreddits.txt') as f:
         
         for sub in [line.strip() for line in f if not line.isspace()]:
-            link = 'https://www.reddit.com/r/' + sub + '.json'
+            link = 'https://www.reddit.com/r/' + sub + '/.json'
 
-            page = get_and_decode_json(link)
-            
-            posts = page['data']['children']
+            for i in range(0, 5):
+                print('link: ' + link)
+                after = crawl_page(link, sub)
+                link = 'https://www.reddit.com/r/' + sub + '/.json?count=25&after=t3_' + after
 
-            posts = [post for post in posts if not sub in post['data']['domain']]
-            
-            image_links = {}
+def crawl_page(link, sub):
 
-            for post in posts:
-                width = str(post['data']['preview']['images'][0]['source']['width'])
-                height = str(post['data']['preview']['images'][0]['source']['height'])
-                url = post['data']['url']
-                print(url)
+    page = get_and_decode_json(link)
+    
+    posts = page['data']['children']
 
-                if url.endswith('.jpg') or url.endswith('.png'):
-                    print('simple image')
+    posts = [post for post in posts if not sub in post['data']['domain']]
+    
+    image_links = {}
+    after = None
 
-                    image_links[post['data']['id']] = url
+    for post in posts:
+        print(post['data']['url'])
+        if 'preview' not in post['data']:
+            # No size, no save
+            continue
 
-                elif 'imgur' in url and 'gallery' in url:
-                    print('imgur gallery')
+        width = str(post['data']['preview']['images'][0]['source']['width'])
+        height = str(post['data']['preview']['images'][0]['source']['height'])
+        url = post['data']['url']
+        #print(url)
+        after = post['data']['id']
 
-                    imgur = get_and_decode_json(url + '.json')
-                    data = imgur['data']
+        if not image_is_right_size(width, height):
+            continue
 
-                    if 'album_images' in data:
-                        print('multiple images in album')
+        if url.endswith('.jpg') or url.endswith('.png'):
+            #print('simple image')
 
-                        for image in data['album_images']['images']:
-                            hsh = image['hash']
-                            image_links[hsh] = 'https://imgur.com/' + hsh
+            image_links[post['data']['id']] = url
 
-                    else:
-                        print('one image in album')
+        elif 'imgur' in url and 'gallery' in url:
+            #print('imgur gallery')
 
-                        hsh = data['image']['hash']
-                        #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
-                        #print(api)
-                        image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+            imgur = get_and_decode_json(url + '.json')
+            data = imgur['data']
 
-                print()
+            if 'album_images' in data:
+                #print('multiple images in album')
 
-            # Fetch the images
-            for id, link in image_links.items():
-                filename = 'images/' + id + '.jpg'
-                if not os.path.isfile(filename):
-                    print('downloading ' + link + '...')
-                    download_image(link, filename)
-                else:
-                    print(link + ' already downloaded, skipping...')
+                for image in data['album_images']['images']:
+                    hsh = image['hash']
+                    image_links[hsh] = 'https://imgur.com/' + hsh
+
+            else:
+                #print('one image in album')
+
+                hsh = data['image']['hash']
+                #api = get_and_decode_json('https://api.imgur.com/3/album/' + str(id) + '/images')
+                #print(api)
+                image_links['hsh'] = 'https://imgur.com/' + hsh + '.jpg'
+
+        #print()
+
+    # Fetch the images
+    for id, link in image_links.items():
+        filename = 'images/' + id + '.jpg'
+        if not os.path.isfile(filename):
+            print('downloading ' + link + '...')
+            download_image(link, filename)
+        else:
+            print(link + ' already downloaded, skipping...')
+
+    return after
 
 def get_and_decode_json(url):
     global clientid
     headers = {}
     headers['User-Agent'] = 'this is my fancy user agent'
     headers['Authorization'] = 'Client-ID ' + clientid
-    request = requests.get(url, headers=headers)
+    request = requests.get(url, headers=headers, timeout=2)
     return json.loads(request.text)
+
+def image_is_right_size(width, height):
+    return int(width) >= 1920 and int(height) >= 1080 \
+        and int(width) > int(height)
 
 def download_image(url, dest):
     #f = open('images/' + str(i) + '.jpg', 'wb')
