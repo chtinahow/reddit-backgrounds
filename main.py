@@ -4,6 +4,7 @@ import json
 import urllib.request
 import os.path
 import sys
+import urllib
 
 keyfile = open('clientid.txt')
 global clientid
@@ -11,21 +12,32 @@ clientid = keyfile.read().strip()
 keyfile.close()
 
 def main():
+    url_params = {}
     with open('subreddits.txt') as f:
         
         for sub in [line.strip() for line in f if not line.isspace()]:
-            link = 'https://www.reddit.com/r/' + sub + '/.json'
+            if 'top' in sys.argv:
+                top = 'top/'
+                url_params = {'sort': 'top', 't': 'all'}
 
-            for i in range(0, 5):
+            link = 'https://www.reddit.com/r/' + sub + '/' + top + '.json' + get_params(url_params)
+
+            after = None
+
+            for i in range(0, 10):
                 print('link: ' + link)
                 after = crawl_page(link, sub)
                 if after == None:
                     break
-                link = 'https://www.reddit.com/r/' + sub + '/.json?count=25&after=t3_' + after
+                url_params['count'] = 25
+                url_params['after'] = 't3_' + after
+                link = 'https://www.reddit.com/r/' + sub + '/' + top + '.json' + get_params(url_params)
 
 def crawl_page(link, sub):
 
     page = get_and_decode_json(link)
+
+    #print(link)
     
     posts = page['data']['children']
 
@@ -35,7 +47,7 @@ def crawl_page(link, sub):
     after = None
 
     for post in posts:
-        print(post['data']['url'])
+        #print(post['data']['url'])
         if 'preview' not in post['data']:
             # No size, no save
             continue
@@ -87,7 +99,7 @@ def crawl_page(link, sub):
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                pass
+                print(e)
         else:
             print(link + ' already downloaded, skipping...')
 
@@ -98,7 +110,7 @@ def get_and_decode_json(url):
     headers = {}
     headers['User-Agent'] = 'this is my fancy user agent'
     headers['Authorization'] = 'Client-ID ' + clientid
-    request = requests.get(url, headers=headers, timeout=2)
+    request = requests.get(url, headers=headers)
     return json.loads(request.text)
 
 def image_is_right_size(width, height):
@@ -110,6 +122,16 @@ def download_image(url, dest):
     f = open(dest, 'wb')
     f.write(requests.get(url).content)
     f.close()
+
+def get_params(d):
+    string = ''
+    i = 0
+    for param in d:
+        start = '?' if i == 0 else '&'
+        string += start + str(param) + '=' + str(d[param])
+        i += 1
+
+    return string
 
 def timeout(func, args=(), kwargs={}, timeout_duration=1, default=None):
     import signal
