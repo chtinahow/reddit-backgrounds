@@ -2,6 +2,7 @@
 import requests
 import json
 import urllib.request
+import os.path
 
 keyfile = open('clientid.txt')
 global clientid
@@ -58,8 +59,12 @@ def main():
 
             # Fetch the images
             for id, link in image_links.items():
-                print('downloading ' + link + ' ...')
-                download_image(link, 'images/' + id + '.jpg')
+                filename = 'images/' + id + '.jpg'
+                if not os.path.isfile(filename):
+                    print('downloading ' + link + '...')
+                    download_image(link, filename)
+                else:
+                    print(link + ' already downloaded, skipping...')
 
 def get_and_decode_json(url):
     global clientid
