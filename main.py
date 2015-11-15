@@ -119,9 +119,12 @@ def image_is_right_size(width, height):
 
 def download_image(url, dest):
     #f = open('images/' + str(i) + '.jpg', 'wb')
-    f = open(dest, 'wb')
-    f.write(requests.get(url).content)
-    f.close()
+    #f = open(dest, 'wb')
+    d = requests.get(url, params = None, allow_redirects = False)
+    if d.status_code == 200:
+        f = open(dest, 'wb')
+        f.write(d.content)
+        f.close()
 
 def get_params(d):
     string = ''
