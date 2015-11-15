@@ -19,6 +19,8 @@ def main():
             for i in range(0, 5):
                 print('link: ' + link)
                 after = crawl_page(link, sub)
+                if after == None:
+                    break
                 link = 'https://www.reddit.com/r/' + sub + '/.json?count=25&after=t3_' + after
 
 def crawl_page(link, sub):
