@@ -76,6 +76,8 @@ def crawl_page(link, sub):
 
         except Exception:
             pass
+        except TypeError:
+            pass
 
         #print()
 
