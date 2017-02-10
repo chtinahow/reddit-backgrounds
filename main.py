@@ -98,7 +98,7 @@ def crawl_page(link, sub):
     for id, link in image_links.items():
         filename = 'images/' + id + '.jpg'
         if not os.path.isfile(filename):
-            print('downloading ' + link + '...')
+            print('\tdownloading ' + link + '...')
             try:
                 timeout(download_image, (link, filename), timeout_duration=10)
             except KeyboardInterrupt:
@@ -106,7 +106,7 @@ def crawl_page(link, sub):
             except Exception as e:
                 print(e)
         else:
-            print(link + ' already downloaded, skipping...')
+            print('\tskipping ' + link + ', already downloaded...')
 
     return after
 
