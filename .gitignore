@@ -64,6 +64,7 @@ target/
 
 # Imgur API
 clientid.txt
+config.json
 
 # Image downloads
 images/

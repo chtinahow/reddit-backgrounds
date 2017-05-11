@@ -5,13 +5,21 @@ import urllib.request
 import os.path
 import sys
 import urllib
+import json
 
-keyfile = open('clientid.txt')
+
 global clientid
-clientid = keyfile.read().strip()
-keyfile.close()
 
 def main():
+    keyfile = open('config.json')
+    data = json.loads(keyfile.read())
+    if "clientid" not in data:
+        print("warning: clientid field isn't in json")
+    else:
+        global clientid
+        clientid = data["clientid"]
+        print("client id: %s" % clientid)
+
     with open('subreddits.txt') as f:
         
         for sub in [line.strip() for line in f if not line.isspace()]:
